@@ -123,27 +123,45 @@ class Cookies {
 	static store(item) {
 		let hasAddedCookies = false;
 		if(
-			// typeof item === "object" && 
-			// item.entries(item) > 0
+			typeof item === "object" && 
 			Object.hasOwn(item, 'id') && 
 			Object.hasOwn(item, 'value') &&
 			typeof item['id'] === 'string' &&
 			typeof item['value'] === 'string'
 		) {
 			let cookies = document.cookie;
-			// Object.keys(item).forEach(key => {
-			// 	if(typeof key === 'string' && typeof item[key] === 'string') {
-			// 		let cookieToAdd = `${key}=${item[key]}`;
-			// 		if(cookies.trim() === '') document.cookie = cookies + cookieToAdd;
-			// 		hasAddedCookies = true;
-			// 	}
-			// })
 			let addedCookie = `${item.id}=${item.value}`;
-			if(cookies.trim() === '') document.cookie = cookies + addedCookie;
-			else document.cookie = cookies + ';' + addedCookie;
+			if(cookies.trim() === '') cookies = cookies + addedCookie;
+			else cookies = cookies + ';' + addedCookie;
+			document.cookie = cookies;
 			hasAddedCookies = true;
 		}
 		return hasAddedCookies;
+	}
+
+	static storeAll(items) {
+		let numberOfAddedCookies = 0;
+		if(
+			typeof items === 'object' &&
+			items instanceof Array &&
+			items.every(item => {return(
+				typeof item === 'object' &&
+				Object.hasOwn(item, 'id') && 
+				Object.hasOwn(item, 'value') &&
+				typeof item['id'] === 'string' &&
+				typeof item['value'] === 'string'
+			)})
+		) {
+			let cookies = document.cookie;
+			items.forEach(item => {
+				numberOfAddedCookies += 1;
+				let addedCookie = `${item.id}=${item.value}`;
+				if(cookies.trim() === '') cookies = cookies + addedCookie;
+				else cookies = cookies + ';' + addedCookie;
+			})
+			document.cookie = cookies;
+		}
+		return numberOfAddedCookies;
 	}
 }
 

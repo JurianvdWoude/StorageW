@@ -57,6 +57,14 @@ class Cookies {
 	static first(query) {
 		const cookies = this.all();
 		if(cookies.length) {
+			if(Number.isInteger(query)) {
+				if(query >= 0 && query < cookies.length) {
+					return cookies[query];
+				}
+				if(query < 0 && query > -cookies.length) {
+					return cookies[cookies.length + query]
+				}
+			} 
 			if(typeof query === "string") {
 				const filteredCookies = cookies.filter(item => item.id === query);
 				if(filteredCookies.length) return filteredCookies[0];
@@ -108,6 +116,14 @@ class Cookies {
 	static find(query) {
 		const cookies = this.all();
 		if(cookies.length) {
+			if(Number.isInteger(query)) {
+				if(query >= 0 && query < cookies.length) {
+					return cookies[query];
+				}
+				if(query < 0 && query > -cookies.length) {
+					return cookies[cookies.length + query]
+				}
+			} 
 			if(typeof query === "string") {
 				const filteredCookies = cookies.filter(item => item.id === query);
 				if(filteredCookies.length) return filteredCookies;

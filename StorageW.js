@@ -1,0 +1,205 @@
+
+class Cookies {	
+	/**
+	 * @typedef {Object} Cookie
+	 * @property {string} id - The identifier of the cookie
+	 * @property {string} value - The value stored inside the cookie
+	 */
+
+	/**
+	 * Gets the stored Cookie and returns them 
+	 * either as an array of {@link Cookie} objects or as an empty array 
+	 * when no cookies are found.
+	 * 
+	 * {@link Cookie} objects look like this: { id: string , value: string }.
+	 * 
+	 * @example
+	 * 	const cached_info = Cookies.all()
+	 *                    .filter(cookie => cookie.name === 'cache')
+	 *                    .match(cookie => cookie.value)
+	 * 
+	 * @returns {Cookie[]} An array of {@link Cookie} objects.
+	 */
+	static all() {
+		if(!navigator.cookieEnabled) {
+			console.error('Cookies aren\'t enabled.');
+			return [];
+		}
+		let cookies = document.cookie;
+		if(cookies.trim() === '') return [];
+		return cookies
+			.split(';')
+			.map(cookie => {
+				let id = cookie.split('=')[0].trim();
+				let value = cookie.substring(cookie.indexOf('=') + 1).trim();
+				return {
+					id: id,
+					value: value
+				}
+			});
+	}
+
+	/**
+	 * Returns the first instance of a stored {@link Cookie}. Returns null 
+	 * if no cookie was found to match the id.
+	 * 
+	 * {@link Cookie} objects look like this: { id: string , value: string }.
+	 * 
+	 * @param {string|RegExp} query 
+	 *  Searches for the Cookie with this string or regex query.
+	 * 
+	 * @example
+	 * 	const stored_name = Cookies.first(\[A-Za-z]\);
+	 * 	const stored_date = Cookies.first("date");
+	 * 
+	 * @returns {Cookie|null} The first {@link Cookie} value it finds.
+	 */
+	static first(query) {
+		const cookies = this.all();
+		if(cookies.length) {
+			if(typeof query === "string") {
+				const filteredCookies = cookies.filter(item => item.id === query);
+				if(filteredCookies.length) return filteredCookies[0];
+			}
+			if(typeof query === "object" && query instanceof RegExp) {
+				const filteredCookies = cookies.filter(item => query.test(item.id));
+				if(filteredCookies.length) return filteredCookies[0];
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Checks whether a Cookie exists with an id which matches the query.
+	 * If it exists, returns true.
+	 * if no Cookie was found to match the id, it returns false.
+	 * 
+	 * @param {string|RegExp} query 
+	 *  Searches for Cookies with this string or regex expression.
+	 * 
+	 * @example
+	 * 	const filtered_values = Cookies.find(\[A-Za-z]\)
+	 *                        	.map(cookie => cookie.name)
+	 * 
+	 * @returns {boolean} Whether a cookie exists with a matching id.
+	 */
+	static has(query) {
+		let cookie = this.first(query);
+		if(cookie && cookie['value']) return true;
+		return false;
+	}
+
+	/**
+	 * Finds all Cookies matching the query and returns an array of 
+	 * {@link Cookie} objects. Returns null 
+	 * if no Cookie was found to match the id.
+	 * 
+	 * {@link Cookie} objects look like this: { id: string , value: string }.
+	 * 
+	 * @param {string|RegExp} query 
+	 *  Searches for Cookies with this string or regex expression.
+	 * 
+	 * @example
+	 * 	const filtered_values = Cookies.find(\[A-Za-z]\)
+	 *                        	.map(cookie => cookie.name)
+	 * 
+	 * @returns {Cookie[]|null} An array of found {@link Cookie} objects.
+	 */
+	static find(query) {
+		const cookies = this.all();
+		if(cookies.length) {
+			if(typeof query === "string") {
+				const filteredCookies = cookies.filter(item => item.id === query);
+				if(filteredCookies.length) return filteredCookies;
+			}
+			if(typeof query === "object" && query instanceof RegExp) {
+				const filteredCookies = cookies.filter(item => query.test(item.id));
+				if(filteredCookies.length) return filteredCookies;
+			}
+		}
+		return null;
+	}
+
+	static store(item) {
+		let hasAddedCookies = false;
+		if(
+			// typeof item === "object" && 
+			// item.entries(item) > 0
+			Object.hasOwn(item, 'id') && 
+			Object.hasOwn(item, 'value') &&
+			typeof item['id'] === 'string' &&
+			typeof item['value'] === 'string'
+		) {
+			let cookies = document.cookie;
+			// Object.keys(item).forEach(key => {
+			// 	if(typeof key === 'string' && typeof item[key] === 'string') {
+			// 		let cookieToAdd = `${key}=${item[key]}`;
+			// 		if(cookies.trim() === '') document.cookie = cookies + cookieToAdd;
+			// 		hasAddedCookies = true;
+			// 	}
+			// })
+			let addedCookie = `${item.id}=${item.value}`;
+			if(cookies.trim() === '') document.cookie = cookies + addedCookie;
+			else document.cookie = cookies + ';' + addedCookie;
+			hasAddedCookies = true;
+		}
+		return hasAddedCookies;
+	}
+}
+
+class DB {
+	#action;
+	#error = null;
+	#request = null;
+
+	constructor(name, version = undefined) {
+		if(typeof name !== 'string' || name === '') {
+			return null;
+		}
+
+		if(typeof version !== 'number') {
+			version = undefined;
+		}
+
+		this.dbName = name;
+		this.dbVersion = version;
+		this.#action = 'init';
+		this.#class = null;
+		this.#store = null;
+
+
+		if(!indexedDB) {
+			var indexedDB = window.indexedDB || 
+				window.webkitIndexedDB ||
+				window.mozIndexedDB || 
+				window.msIndexedDB;
+		}
+
+		if(indexedDB) {
+			this.#request = indexedDB.open(name, version);
+		} else {
+			this.#request = null;
+		}
+	}
+
+	create(store) {
+		if(
+			typeof store === 'function' &&
+			store.prototype
+		) {
+			this.#class = store;
+		}
+	}
+
+	update(index) {
+		if(
+			this.#store &&
+			this.#class &&
+			typeof index === 'object' && 
+			index instanceof this.#class
+		) {
+			let entries = Object.entries(index);
+		}
+	}
+}
+

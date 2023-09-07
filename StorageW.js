@@ -190,7 +190,7 @@ class Cookies {
 		return false;
 	}
 
-	static storeJSON(item) {
+	static storeAsJSON(item) {
 		if(
 			typeof item === "object" && 
 			Object.hasOwn(item, 'id') && 

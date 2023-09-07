@@ -189,6 +189,43 @@ class Cookies {
 		}
 		return false;
 	}
+
+	static storeJSON(item) {
+		if(
+			typeof item === "object" && 
+			Object.hasOwn(item, 'id') && 
+			Object.hasOwn(item, 'value') &&
+			typeof item['id'] === 'string' 
+		) {
+			try {
+				let stringifiedCookie = JSON.stringify(item.value)
+				return store({
+					id: item.id,
+					value: stringifiedCookie,
+				});
+			} catch(e) {
+				console.error('Error: wasn\'t able to stringify cookie', e);
+				return false;
+			}
+		}
+		return false;
+	}
+
+	static unravel() {
+		const cookies = this.all();
+		let checkedCookies = cookies.map(cookie => {
+			try {
+				let parsedValue = JSON.parse(cookie.value)
+				return {
+					id: cookie.id,
+					value: parsedValue,
+				};
+			} catch(e) {
+				return cookie;
+			}
+		});
+		return checkedCookies;
+	}
 }
 
 class DB {

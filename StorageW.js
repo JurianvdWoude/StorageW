@@ -140,6 +140,7 @@ class Cookies {
 	}
 
 	static storeAll(items) {
+		let numberOfItems = 0;
 		let numberOfAddedCookies = 0;
 		if(
 			typeof items === 'object' &&
@@ -152,6 +153,7 @@ class Cookies {
 				typeof item['value'] === 'string'
 			)})
 		) {
+			numberOfItems = items.length;
 			let cookies = document.cookie;
 			items.forEach(item => {
 				numberOfAddedCookies += 1;
@@ -161,7 +163,15 @@ class Cookies {
 			})
 			document.cookie = cookies;
 		}
-		return numberOfAddedCookies;
+		if(numberOfItems > 0 && numberOfItems === numberOfAddedCookies) {
+			return true;
+		}
+		if(numberOfItems > 0) {
+			console.error(`Error: Tried to add ${numberOfItems} cookies, but added ${numberOfAddedCookies} cookies instead.`)
+		} else {
+			console.error(`Error: Failed to add Cookies. Did you add more that one or is the Cookie object mismatched?`)
+		}
+		return false;
 	}
 }
 
@@ -169,6 +179,8 @@ class DB {
 	#action;
 	#error = null;
 	#request = null;
+	#class;
+	#store;
 
 	constructor(name, version = undefined) {
 		if(typeof name !== 'string' || name === '') {

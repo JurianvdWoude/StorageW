@@ -160,14 +160,75 @@ class Cookies {
 				if(query < 0 && query > -cookies.length) {
 					return [cookies[cookies.length + query]]
 				}
-			} 
+			}
 			if(typeof query === "string") {
 				const filteredCookies = cookies.filter(item => item.id === query);
 				if(filteredCookies.length) return filteredCookies;
 			}
-			if(typeof query === "object" && query instanceof RegExp) {
-				const filteredCookies = cookies.filter(item => query.test(item.id));
-				if(filteredCookies.length) return filteredCookies;
+			if(typeof query === "object") {
+				if(query instanceof RegExp) {
+					const filteredCookies = cookies.filter(item => query.test(item.id));
+					if(filteredCookies.length) return filteredCookies;
+				}
+				if(
+					Array.isArray(query) &&
+					query.length === 2 &&
+					typeof query[0] === 'number' &&
+					typeof query[1] === 'number'
+					// doesn't work with negatives 
+
+					// start < cookies.length &&
+					// end < cookies.length &&
+					// start > -cookies.length &&
+					// end > -cookies.length
+
+				) {
+					let start = query[0];
+					let end = query[1];
+					// are positive
+					if(
+						start <= end &&
+						start >= 0 &&
+						end < cookies.length
+					) {
+						const filteredCookies = [...Array(end + 1).keys()].slice(start).map(index => cookies[index]);
+						return filteredCookies;
+					}
+
+					// start is negative
+					if(
+						start < 0 &&
+						end >= 0 && 
+						start >= -cookies.length &&
+						end < cookies.length &&
+						end >= (start + cookies.length)
+					) {
+						const filteredCookies = [...Array(end + 1).keys()].slice(start + cookies.length).map(index => cookies[index]);
+						return filteredCookies;
+					}
+
+					// end is negative
+					if(
+						end < 0 &&
+						start >= 0 &&
+						start < cookies.length &&
+						end >= -cookies.length &&
+						end >= (start - cookies.length)
+					) {
+						const filteredCookies = [...Array(cookies.length + end + 1).keys()].slice(start).map(index => cookies[index]);
+						return filteredCookies;
+					}
+
+					// both are negative
+					if(
+						start < end &&
+						end < 0 &&
+						start >= -cookies.length
+					) {
+						const filteredCookies = [...Array(cookies.length + end + 1).keys()].slice(start + cookies.length).map(index => cookies[index]);
+						return filteredCookies;
+					}
+				}
 			}
 		}
 		return null;

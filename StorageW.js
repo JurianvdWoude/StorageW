@@ -175,13 +175,6 @@ class Cookies {
 					query.length === 2 &&
 					typeof query[0] === 'number' &&
 					typeof query[1] === 'number'
-					// doesn't work with negatives 
-
-					// start < cookies.length &&
-					// end < cookies.length &&
-					// start > -cookies.length &&
-					// end > -cookies.length
-
 				) {
 					let start = query[0];
 					let end = query[1];
@@ -438,7 +431,7 @@ class Cookies {
 	 * 
 	 * cookieType ='json':
 	 * * Only checks whether the value of a cookie object is a json.
-	 * * If it is a json string, it will parse it, and store it as the cookie's value.
+	 * * If it is a json string AND parses to either an object or array, it will parse it, and store it as the cookie's value.
 	 * * The cookie's type is set to 'json'
 	 * 
 	 * cookieType = 'container':
@@ -480,11 +473,15 @@ class Cookies {
 			checkedCookies = checkedCookies.map(cookie => {
 				try {
 					let parsedValue = JSON.parse(cookie.value)
-					return {
-						id: cookie.id,
-						type: parsedType,
-						value: parsedValue,
-					};
+					if(typeof parsedValue === 'object') {
+						return {
+							id: cookie.id,
+							type: parsedType,
+							value: parsedValue,
+						};
+					} else {
+						return cookie;
+					}
 				} catch(e) {
 					return cookie;
 				}
@@ -515,6 +512,7 @@ class Cookies {
 										value: value.substring(value.indexOf('=') + 1).trim()
 									}
 								} else {
+									// return error here? =.length should be &.length + 1...
 									return {
 										id: value,
 										type: 'string',
